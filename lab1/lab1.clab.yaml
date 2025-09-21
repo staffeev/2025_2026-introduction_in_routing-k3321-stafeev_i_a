@@ -1,0 +1,27 @@
+name: lab1
+
+topology:
+  kinds:
+    vr-ros:
+      image: vrnetlab/mikrotik_routeros:6.47.9
+    linux:
+      image: ubuntu:latest
+  nodes:
+    R01.TEST:
+      kind: vr-ros
+    SW01.L3.01.TEST:
+      kind: vr-ros
+    SW02.L3.01.TEST:
+      kind: vr-ros
+    SW02.L3.02.TEST:
+      kind: vr-ros
+    PC1:
+      kind: linux
+    PC2:
+      kind: linux
+  links:
+    - endpoints: ["R01.TEST:eth1", "SW01.L3.01.TEST:eth1"]
+    - endpoints: ["SW01.L3.01.TEST:eth2", "SW02.L3.01.TEST:eth1"]
+    - endpoints: ["SW01.L3.01.TEST:eth3", "SW02.L3.02.TEST:eth1"]
+    - endpoints: ["SW02.L3.01.TEST:eth2", "PC1:eth1"]
+    - endpoints: ["SW02.L3.02.TEST:eth2", "PC2:eth1"]
