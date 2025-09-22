@@ -1,24 +1,46 @@
 name: lab1
 
+mgmt:
+  network: my_mgmt
+  ipv4-subnet: 172.50.0.0/24
+
 topology:
   kinds:
     vr-ros:
       image: vrnetlab/mikrotik_routeros:6.47.9
     linux:
-      image: ubuntu:latest
+      image: alpine:latest
   nodes:
     R01.TEST:
       kind: vr-ros
+      mgmt-ipv4: 172.50.0.2
+      startup-config: node_configs/router.rsc
     SW01.L3.01.TEST:
       kind: vr-ros
+      mgmt-ipv4: 172.50.0.3
+      startup-config: node_configs/switch01.rsc
     SW02.L3.01.TEST:
       kind: vr-ros
+      mgmt-ipv4: 172.50.0.4
+      startup-config: node_configs/switch02.01.rsc
     SW02.L3.02.TEST:
       kind: vr-ros
+      mgmt-ipv4: 172.50.0.5
+      startup-config: node_configs/switch02.02.rsc
     PC1:
       kind: linux
+      mgmt-ipv4: 172.50.0.101
+      binds:
+        - ./node_configs:/node_configs
+      exec:
+        - sh /node_configs/endpoint1.sh
     PC2:
       kind: linux
+      mgmt-ipv4: 172.50.0.102
+      binds:
+        - ./node_configs:/node_configs
+      exec:
+        - sh /node_configs/endpoint2.sh
   links:
     - endpoints: ["R01.TEST:eth1", "SW01.L3.01.TEST:eth1"]
     - endpoints: ["SW01.L3.01.TEST:eth2", "SW02.L3.01.TEST:eth1"]
