@@ -38,17 +38,17 @@ topology:
     PC1:
       kind: linux
       mgmt-ipv4: 172.50.0.101
-      # binds:
-      #   - ./node_configs:/node_configs
-      # exec:
-      #   - sh /node_configs/endpoint1.sh
+      binds:
+        - ./node_configs:/node_configs
+      exec:
+        - sh /node_configs/endpoint1.sh
     SGI_Prism:
       kind: linux
       mgmt-ipv4: 172.50.0.102
-      # binds:
-        # - ./node_configs:/node_configs
-      # exec:
-        # - sh /node_configs/endpoint2.sh
+      binds:
+        - ./node_configs:/node_configs
+      exec:
+        - sh /node_configs/endpoint2.sh
   links:
     - endpoints: ["R01.SPB:eth1", "R01.MSK:eth1"]
     - endpoints: ["R01.SPB:eth2", "R01.HKI:eth2"]
