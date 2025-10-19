@@ -4,178 +4,27 @@ Course: [Introduction in routing](https://github.com/itmo-ict-faculty/introducti
 Year: 2025/2026
 Group: K3321
 Author: Stafeev Ivan Alekseevich
-Lab: Lab2
-Date of create: 12.10.2025
-Date of finished: 13.10.2025
+Lab: Lab3
+Date of create: 17.10.2025
+Date of finished: 20.10.2025
 
-## Лабораторная работа №2. Эмуляция распределенной корпоративной сети связи, настройка статической маршрутизации между филиалами
+## Лабораторная работ №3. Эмуляция распределенной корпоративной сети связи, настройка OSPF и MPLS, организация первого EoMPLS
 
-**Цель работы**: ознакомиться с принципами планирования IP адресов, настройке статической маршрутизации и сетевыми функциями устройств.
+**Цель работы**: изучить протоколы OSPF и MPLS, механизмы организации EoMPLS. 
 
 ### Схема сети
 
-![Схема сети](img/scheme_lab2.png)
+![Схема сети](img/scheme_lab3.png)
 
-Топология этой сети в yaml имеет простой вид:
+Топология это сети в yaml имеет [простой вид](lab3.clab.yaml), поэтому тут дублироваться не будет. Задаются шесть роутеров с указанием стартового конфига и два компьютера, также с указанием конфига, а также связии между ними по аналогии со схемой сети на изображении.
 
-```yml
-name: lab2
+![Граф сети](img/graph.png)
 
-mgmt:
-  network: my_mgmt
-  ipv4-subnet: 172.50.0.0/24
-
-topology:
-  kinds:
-    vr-ros:
-      image: vrnetlab/mikrotik_routeros:6.47.9
-    linux:
-      image: alpine:latest
-  nodes:
-    R01.FRT:
-      kind: vr-ros
-      mgmt-ipv4: 172.50.0.3
-      startup-config: node_configs/r01_frt.rsc
-    R01.BRL:
-      kind: vr-ros
-      mgmt-ipv4: 172.50.0.4
-      startup-config: node_configs/r01_brl.rsc
-    R01.MSK:
-      kind: vr-ros
-      mgmt-ipv4: 172.50.0.2
-      startup-config: node_configs/r01_msk.rsc
-    PC1:
-      kind: linux
-      mgmt-ipv4: 172.50.0.101
-      binds:
-        - ./node_configs:/node_configs
-      exec:
-        - sh /node_configs/endpoint1.sh
-    PC2:
-      kind: linux
-      mgmt-ipv4: 172.50.0.102
-      binds:
-        - ./node_configs:/node_configs
-      exec:
-        - sh /node_configs/endpoint2.sh
-    PC3:
-      kind: linux
-      mgmt-ipv4: 172.50.0.103
-      binds:
-        - ./node_configs:/node_configs
-      exec:
-        - sh /node_configs/endpoint3.sh
-  links:
-    - endpoints: ["R01.BRL:eth3", "PC3:eth1"]
-    - endpoints: ["R01.MSK:eth3", "PC1:eth1"]
-    - endpoints: ["R01.FRT:eth3", "PC2:eth1"]
-    - endpoints: ["R01.BRL:eth1", "R01.MSK:eth1"]
-    - endpoints: ["R01.BRL:eth2", "R01.FRT:eth1"]
-    - endpoints: ["R01.MSK:eth2", "R01.FRT:eth2"]
-```
-
-В сущности задаются три роутера с указанием стартового конфига и три компьютера, также с указанием конфига, а также связии между ними по аналогии со схемой сети на изображении.
-
-### Конфигурация роутеров
-
-Сразу на примере конфигурации роутера для Москвы покажем, что необходимо задать в конфиге.
-
-```bash
-/ip address
-add address=192.168.13.1/24 interface=ether2
-add address=192.168.12.1/24 interface=ether3
-add address=10.10.0.1/24 interface=ether4
-
-/ip pool
-add name=dhcp_msk_pool ranges=10.10.0.10-10.10.0.254
-
-/ip dhcp-server network
-add address=10.10.0.0/24 gateway=10.10.0.1
-
-/ip dhcp-server
-add address-pool=dhcp_msk_pool disabled=no interface=ether4 name=dhcp_msk
-
-/ip route
-add dst-address 10.20.0.0/24 gateway=192.168.12.2
-add dst-address 10.30.0.0/24 gateway=192.168.13.3
-
-/system identity
-set name=R_MSK
-
-/user
-add name=staffeev password=strongpassword group=full
-remove admin
-```
-
-Задаются адреса на интерфейсах, один в сторону комьютера, имеющих вид `10.<num>.0.1/24` (для Москвы 10, Франкфурт - 20, Берлин - 30), а остальные адреса в межроутерных сетях вида `192.168.<num1>.<num2>/24`, где `num1` - номер подсети, соединяющей два роутера (пример: `12` соединяет Москву и Франкфурт), `num2` - номер города (Москва - 1, Франкфурт - 2, Берлин - 3).
-
-Создается пул ip-адресов из соответствующей городу подсети для настройки DHCP, после происходит настройка DHCP-сервера, использующего созданный пул. 
-
-Самое главное для статической маршрутизации: прописать сами маршруты через `/ip route` в другие сети с указанием шлюзов в межроутерных сетях.
-
-И в конце меняется имя устройство и создается пользователь.
-
-По аналогии были созданы конфиги для Франкфурта:
-
-```bash
-/ip address
-add address=192.168.12.2/24 interface=ether3
-add address=192.168.23.2/24 interface=ether2
-add address=10.20.0.1/24 interface=ether4
-
-/ip pool
-add name=dhcp_frt_pool ranges=10.20.0.100-10.20.0.254
-
-/ip dhcp-server network
-add address=10.20.0.0/24 gateway=10.20.0.1
-
-/ip dhcp-server
-add address-pool=dhcp_frt_pool disabled=no interface=ether4 name=dhcp_frt
-
-/ip route
-add dst-address 10.10.0.0/24 gateway=192.168.12.1
-add dst-address 10.30.0.0/24 gateway=192.168.23.3
-
-/system identity
-set name=R_FRT
-
-/user
-add name=staffeev password=strongpassword group=full
-remove admin
-```
-
-и для Берлина:
-
-```bash
-/ip address
-add address=192.168.13.3/24 interface=ether2
-add address=192.168.23.3/24 interface=ether3
-add address=10.30.0.1/24 interface=ether4
-
-/ip pool
-add name=dhcp_brl_pool ranges=10.30.0.100-10.30.0.254
-
-/ip dhcp-server network
-add address=10.30.0.0/24 gateway=10.30.0.1
-
-/ip dhcp-server
-add address-pool=dhcp_brl_pool disabled=no interface=ether4 name=dhcp_brl
-
-/ip route
-add dst-address 10.10.0.0/24 gateway=192.168.13.1
-add dst-address 10.20.0.0/24 gateway=192.168.23.2
-
-/system identity
-set name=R_BRL
-
-/user
-add name=staffeev password=strongpassword group=full
-remove admin
-```
+Видно, что сеть собрана правильно с точки зрения устройств и линков между ними.
 
 ### Конфигурация конечных устройств
 
-Конфиг для компьютеров имеет следующий вид:
+Конфиг для компьютера PC1 и удаленного сервера SGI_Prism имеет следующий вид:
 
 ```bash
 #!/bin/sh
@@ -184,35 +33,177 @@ ip link set eth1 up
 udhcpc -i eth1 -q
 
 ip route del default via 172.50.0.1 dev eth0
-ip route add default via 10.10.0.1 dev eth1
 ```
 
 Через `udhcp` происходит запрос ip-адреса и DHCP-сервера. В маршрутах прописывается адрес шлюза, а также удаляется путь по умолчанию, связанный с менеджмент-сетью (она перехватывает все запросы, и компьютеры не могут общаться).
 
+### Конфигурация роутеров
+
+В этой лабораторной работе конфигурация роутеров получилась на порядок сложнее, чем в предудыщей работе, поэтому буду давать конфиги логическими блоками:
+
+Сначала уже традиционно изменяем имя устройства и добавляем нового пользователя:
+
+```bash
+/system identity
+set name=R_SPB
+/user
+add name=staffeev password=strongpassword group=full
+remove admin
+```
+
+
+На каждом роутере был создан `bridge` loopback для его использования при настройке OSPF (хороший тон, так как этот виртуальнйы интерфейс никогда не отключается, если его не отключить вручную).
+
+```bash
+/interface bridge
+add name=loopback
+```
+
+Следом создаются ip-адреса на интерфейсах роутера. Для `loopback`-интерфейса я прописываю адрес вида `n.n.n.n/32`, который будет не раз применен в дальнейшем. Вот пример для `R01.SPB`
+
+```bash
+/ip address
+add address=10.0.12.1/24 interface=ether2
+add address=10.0.13.1/24 interface=ether3
+add address=192.168.10.1/24 interface=loopback
+add address=1.1.1.1/32 interface=loopback
+```
+
+(для `R01.SPB` и `R01.NY` производитя настройка DHCP-сервера привычгным путем. Пример для СПб:
+
+```bash
+/ip pool
+add name=dhcp_spb_pool ranges=192.168.10.100-192.168.10.254
+/ip dhcp-server network
+add address=192.168.10.0/24 gateway=192.168.10.1
+/ip dhcp-server
+add address-pool=dhcp_spb_pool disabled=no interface=loopback name=dhcp_spb
+```
+)
+
+**Настройка OSPF**. Для нее нужно выполнить неколько пунктов:
+
+1) Создание зон. Я решил выделить `R01.NY` с его сетью в отдельную зону, поэтому я создю новую зону на роутерах `R01.NY`, `R01.LND` и `R01.LBN` (последние два являются пограничными роутерами):
+
+```bash
+/routing ospf area
+add name=area_us area-id=0.0.0.1
+```
+
+При работе с зонми всегда должна быть backbone-зона с id 0.0.0.0. по умолчанию она уже есть, и я ее прописываю дальше.
+
+2) Создание OSPF-instance. Здесь для дефолтного инстанса я просто устанавливаю routetr-id, равный `n.n.n.n/32` (такой же адрес, как у `loopback`-интерфейса).
+
+```bash
+/routing ospf instance
+set [find default=yes] router-id=4.4.4.4
+```
+
+На "начальном" и "конечном" роетурах (Нью-Йорк и СПб) я еще прописываю команду, которая "вставляет" присоединенные к роутерам маршруты (то есть в сети `192.168.10.0` и `192.168.20.0` в нашем случае) в маршрутизацию OSPF.
+
+```bash
+set 0 redistribute-connected=as-type-1
+```
+
+Это делать не обязательно, можно просто в `network` добавить эти же сети, но я решил сделать через такую команду.
+
+3) Добавление сетей в OSPF. На каждом роутере каждую связанную с ним сеть нужно прописать с указанием зоны, к которой она принадлежит. Пример для `R01.LBN`:
+
+```bash
+/routing ospf network
+add area=backbone network=10.0.24.0/24
+add area=backbone network=10.0.34.0/24
+add area=backbone network=4.4.4.4/32
+add area=area_us network=10.0.46.0/24
+```
+
+
+**Настройка MPLS**.
+
+Здесь все проще. Нужно только включить протокол LDP на каждом роутере, прописать LSR-id и указать интерфейсы, на которых будет работать MPLS (все, кроме тех, которые ведут в рабочие сети). Пример для `R01.SPB`:
+
+```bash
+/mpls ldp
+set enabled=yes lsr-id=1.1.1.1 transport-address=1.1.1.1
+/mpls ldp interface
+add interface=ether2
+add interface=ether3
+```
+
+**Настройка VPLS**. В RouteOs нет разграничения между EoMPLS и VPLS (хотя первай технлогия устанавливает маршруты одик-к-одному, а вторая - многие-ко-многим), поэтому будет настроен второй.
+
+Настройка производится только на роутерах `R01.SPB` и `R01.NY`. Сначала создается специальный интерфейс:
+
+```bash
+/interface vpls
+add name=eompls_to_NY remote-peer=6.6.6.6 vpls-id=100:1 disabled=no
+```
+
+(в конфиге для `R01.NY` 6.6.6.6 поменяется на 1.1.1.1 - адрес loopback-интерфейса роутера в СПб)
+
+В конце в `bridge` loopback я добавляю физический интерфейс, ведущий в рабочую сеть, и VPLS-интерфейс.
+
+```bash
+/interface bridge port
+add bridge=loopback interface=ether4
+add bridge=loopback interface=eompls_to_NY
+```
+
+На этом конфигурация завершена.
+
+
 ### Проверка работоспособности
 
-Деплой происходит успешно:
+#### OSPF
 
-![Деплой](img/clab-deploy.png)
+![OSPF SPB](img/ospf_SPB.png)
 
-Раздача ip-адресов через DHCP-сервер также выполняется успешно (на примере R01.FRT):
+![OSPF MSK](img/ospf_MSK.png)
 
-![DHCP](img/dhcp-lease.png)
+![OSPF HKI](img/ospf_HKI.png)
 
-На следущем изображении показано, что прописанные маршруты на роутере сохранены и что с одного роутера доступны другие через `ping`:
+![OSPF LBN](img/ospf_LBN.png)
 
-![ping роутеров](img/route.png)
+![OSPF LND](img/ospf_LND.png)
 
-Комьютеры успешно получили ip-адрес от DHCP-сервера и могут пинговать друг друга:
+![OSPF NY](img/ospf_NY.png)
 
-![PC1](img/pc1.png)
+Видно, что все маршруты имеют флаг `o` - ospf (то есть осзданы динамически), а также у каждого роутера есть установленные отношения связности `Full` с соседними роутерами.
 
-![PC2](img/pc2.png)
+#### MPLS
 
-![PC3](img/pc3.png)
+![MPLS SPB](img/mpls_SPB.png)
 
+![MPLS MSK](img/mpls_MSK.png)
 
+![MPLS HKI](img/mpls_HKI.png)
+
+![MPLS LBN](img/mpls_LBN.png)
+
+![MPLS LND](img/mpls_LND.png)
+
+![MPLS NY](img/mpls_NY.png)
+
+Видно, что у каждого роутера есть соседи, с которыми происходит обмен по протоколу LDP, а также у каждого роутера собраалсь база LFIB, хранящая инфомрацию о всех метках.
+
+Информация о метках также появляется в выводе команды `traceroute`:
+
+![Traceroute](img/traceroute.png)
+
+#### VPLS
+
+Во-первых, в выводе MPLS для роутеров `R01.SPB` и `R01.NY` они уже были указаны друг для друга как соседи с флагом `V` - vpls.
+
+![MPLS SPB](img/mpls_SPB.png)
+
+![MPLS NY](img/mpls_NY.png)
+
+Во-вторых, в выводе `/interface vpls monitor` также указывается состояние VPLS (метки, next hop и все прочее):
+
+![VPLS SPB](img/vpls_SPB.png)
+
+![VPLS NY](img/vpls_NY.png)
 
 ### Заключение
 
-В ходе выполнения лабораторной работы была создана топология сети, состоящая из трех роутеров и трех конечных устройств. Настроена раздача адресов через DHCP и статическая маршрутизация. Таким образом, все конечные устройства из разных географических зон могут общаться друг с другом. Цель работы достигнута.
+В ходе выполнения лабораторной работы была создана топология сети, состоящая из шести роутеров и двух конечных устройств. Настроена раздача адресов через DHCP и динамическая маршрутизация через OSPF. Был настроен MPLS и VPLS (EoMPLS) над созданной сетью. Таким образом, конечные устройства из разных географических зон могут общаться друг с другом. Цель работы достигнута.
