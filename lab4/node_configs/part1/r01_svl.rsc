@@ -8,6 +8,14 @@ add address=192.168.40.1/24 interface=loopback
 add address=4.4.4.4/32 interface=loopback
 
 
+/ip pool
+add name=dhcp_svl_pool ranges=192.168.40.100-192.168.40.254
+/ip dhcp-server network
+add address=192.168.40.0/24 gateway=192.168.40.1
+/ip dhcp-server
+add address-pool=dhcp_svl_pool disabled=no interface=loopback name=dhcp_svl
+
+
 /routing ospf instance
 set [find default=yes] router-id=4.4.4.4
 set 0 redistribute-connected=as-type-1
@@ -30,12 +38,14 @@ add network=4.4.4.4/32
 add name=peer_LBN remote-address=3.3.3.3 remote-as=65000 instance=default update-source=loopback
 
 
-/ip pool
-add name=dhcp_spb_pool ranges=192.168.40.100-192.168.40.254
-/ip dhcp-server network
-add address=192.168.40.0/24 gateway=192.168.40.1
-/ip dhcp-server
-add address-pool=dhcp_spb_pool disabled=no interface=loopback name=dhcp_spb
+/interface bridge
+add name=vrf_bridge
+/ip address
+add address=10.255.255.4/32 interface=vrf_bridge
+/routing bgp instance vrf
+add routing-mark=VRF_DEVOPS redistribute-connected=yes
+/ip route vrf
+add routing-mark=VRF_DEVOPS interfaces=vrf_bridge export-route-targets=65000:101 import-route-targets=65000:101 route-distinguisher=65000:1
 
 
 /system identity
