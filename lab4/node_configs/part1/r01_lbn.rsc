@@ -18,6 +18,14 @@ add area=backbone network=10.0.35.0/24
 add area=backbone network=3.3.3.3/32
 
 
+/mpls ldp
+set enabled=yes lsr-id=3.3.3.3 transport-address=3.3.3.3
+/mpls ldp interface
+add interface=ether2
+add interface=ether3
+add interface=ether4
+
+
 /routing bgp instance
 set default as=65000 router-id=3.3.3.3
 /routing bgp network
