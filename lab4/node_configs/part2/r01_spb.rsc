@@ -36,7 +36,7 @@ add name=vpls_bridge
 /interface bridge port
 add bridge=vpls_bridge interface=ether3
 /ip address
-add address=20.0.0.1/24 interface=vpls_bridge
+add address=10.255.255.1/32 interface=vpls_bridge
 /interface vpls bgp-vpls
 add bridge=vpls_bridge site-id=1 route-distinguisher=65531:1 import-route-targets=65531:101 export-route-targets=65531:101
 
