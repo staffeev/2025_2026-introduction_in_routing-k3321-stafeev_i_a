@@ -4,7 +4,7 @@ add name=loopback
 
 /ip address
 add address=10.0.56.6/24 interface=ether2
-add address=192.168.20.1/24 interface=loopback
+add address=192.168.60.1/24 interface=ether3
 add address=10.10.255.6/32 interface=loopback
 
 
@@ -13,7 +13,7 @@ add name=dhcp_ny_pool ranges=192.168.60.100-192.168.60.254
 /ip dhcp-server network
 add address=192.168.60.0/24 gateway=192.168.60.1
 /ip dhcp-server
-add address-pool=dhcp_ny_pool disabled=no interface=loopback name=dhcp_ny
+add address-pool=dhcp_ny_pool disabled=no interface=ether3 name=dhcp_ny
 
 
 /routing ospf instance

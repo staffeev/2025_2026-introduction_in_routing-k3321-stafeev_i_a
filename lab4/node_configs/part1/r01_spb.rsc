@@ -4,7 +4,7 @@ add name=loopback
 
 /ip address
 add address=10.0.12.1/24 interface=ether2
-add address=192.168.10.1/24 interface=loopback
+add address=192.168.10.1/24 interface=ether3
 add address=10.10.255.1/32 interface=loopback
 
 
@@ -13,7 +13,7 @@ add name=dhcp_spb_pool ranges=192.168.10.100-192.168.10.254
 /ip dhcp-server network
 add address=192.168.10.0/24 gateway=192.168.10.1
 /ip dhcp-server
-add address-pool=dhcp_spb_pool disabled=no interface=loopback name=dhcp_spb
+add address-pool=dhcp_spb_pool disabled=no interface=ether3 name=dhcp_spb
 
 
 /routing ospf instance

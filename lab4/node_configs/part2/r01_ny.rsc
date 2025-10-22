@@ -4,7 +4,7 @@ add name=loopback
 
 /ip address
 add address=10.0.56.6/24 interface=ether2
-add address=192.168.20.1/24 interface=ether3
+add address=192.168.60.1/24 interface=ether3
 add address=10.10.255.6/32 interface=loopback
 
 
@@ -46,7 +46,7 @@ add name=dhcp_vpls_pool ranges=20.0.0.100-20.0.0.254
 /ip dhcp-server network
 add address=20.0.0.0/24 gateway=20.0.0.1
 /ip dhcp-server
-add address-pool=dhcp_vpls_pool disabled=no interface=loopback name=dhcp_vpls
+add address-pool=dhcp_vpls_pool disabled=no interface=vpls_bridge name=dhcp_vpls
 
 
 /system identity
