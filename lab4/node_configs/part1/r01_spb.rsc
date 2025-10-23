@@ -5,7 +5,7 @@ add name=loopback
 /ip address
 add address=10.0.12.1/24 interface=ether2
 add address=192.168.10.1/24 interface=ether3
-add address=10.10.255.1/32 interface=loopback
+add address=10.10.255.1/32 interface=loopback network=10.10.255.1
 
 
 /ip pool

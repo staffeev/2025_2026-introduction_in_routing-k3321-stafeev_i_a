@@ -182,27 +182,27 @@ add bridge=vpls_bridge site-id=1 route-distinguisher=65531:1 import-route-target
 
 ![OSPF SPB](img/ospf_SPB.png)
 
-![OSPF MSK](img/ospf_MSK.png)
-
 ![OSPF HKI](img/ospf_HKI.png)
 
 ![OSPF LBN](img/ospf_LBN.png)
+
+![OSPF SVL](img/ospf_SVL.png)
 
 ![OSPF LND](img/ospf_LND.png)
 
 ![OSPF NY](img/ospf_NY.png)
 
-Видно, что все маршруты имеют флаг `o` - ospf (то есть осзданы динамически), а также у каждого роутера есть установленные отношения связности `Full` с соседними роутерами.
+Видно, что все маршруты имеют флаг `o` - ospf (то есть созданы динамически), а также у каждого роутера есть установленные отношения связности `Full` с соседними роутерами.
 
 #### MPLS
 
 ![MPLS SPB](img/mpls_SPB.png)
 
-![MPLS MSK](img/mpls_MSK.png)
-
 ![MPLS HKI](img/mpls_HKI.png)
 
 ![MPLS LBN](img/mpls_LBN.png)
+
+![MPLS SVL](img/mpls_SVL.png)
 
 ![MPLS LND](img/mpls_LND.png)
 
@@ -210,23 +210,44 @@ add bridge=vpls_bridge site-id=1 route-distinguisher=65531:1 import-route-target
 
 Видно, что у каждого роутера есть соседи, с которыми происходит обмен по протоколу LDP, а также у каждого роутера собраалсь база LFIB, хранящая инфомрацию о всех метках.
 
-Информация о метках также появляется в выводе команды `traceroute`:
+Информация о метках также появляется в выводе команды `traceroute`. Пример для `R01.SPB` при пинге конечного устройства, связанного с `R01.NY`:
 
 ![Traceroute](img/traceroute.png)
 
+### iBGP
+
+![BGP SPB](img/bgp_SPB.png)
+
+![BGP SVL](img/bgp_SVL.png)
+
+![BGP NY](img/bgp_NY.png)
+
+В выводе команды `/routing bgp peer print` виден флаг **E**, показывающий, что соединение установлено. Также в `/ip route` выводятся BGP-маршруты (у них `distance` больше, чем у OSPF - 200 против 110). 
+
+### VRF
+
+![VRF SPB](img/vrf_SPB.png)
+
+![VRF SVL](img/vrf_SVL.png)
+
+![VRF NY](img/vrf_NY.png)
+
+В таблице маршрутизации на каждом роутере присутствуют маршруты с VRF-меткой (`.. where routing-mark=VRF_DEVOPS`). С каждого роутера можно пропинговать другие, указав в качестве таблицы маршутизации `VRF_DEVOPS`.
+
 #### VPLS
 
-Во-первых, в выводе MPLS для роутеров `R01.SPB` и `R01.NY` они уже были указаны друг для друга как соседи с флагом `V` - vpls.
+DHCP-сервер на роутере `R01.NY` раздал ip-адреса из одной подсети всем конечным устройствам:
 
-![MPLS SPB](img/mpls_SPB.png)
+![VPLS NY](img/vpls1.png)
 
-![MPLS NY](img/mpls_NY.png)
+Все конечные устройства могут друг друга пинговать:
 
-Во-вторых, в выводе `/interface vpls monitor` также указывается состояние VPLS (метки, next hop и все прочее):
+![VPLS PC1](img/vpls2.png)
 
-![VPLS SPB](img/vpls_SPB.png)
+![VPLS PC2](img/vpls3.png)
 
-![VPLS NY](img/vpls_NY.png)
+![VPLS PC3](img/vpls4.png)
+
 
 ### Заключение
 

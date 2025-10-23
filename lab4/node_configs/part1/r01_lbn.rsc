@@ -6,7 +6,7 @@ add name=loopback
 add address=10.0.34.3/24 interface=ether2
 add address=10.0.23.3/24 interface=ether3
 add address=10.0.35.3/24 interface=ether4
-add address=10.10.255.3/32 interface=loopback
+add address=10.10.255.3/32 interface=loopback network=10.10.255.3
 
 
 /routing ospf instance

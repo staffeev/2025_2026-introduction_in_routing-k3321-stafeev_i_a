@@ -6,7 +6,7 @@ add name=loopback
 add address=10.0.12.2/24 interface=ether2
 add address=10.0.23.2/24 interface=ether3
 add address=10.0.25.2/24 interface=ether4
-add address=10.10.255.2/32 interface=loopback
+add address=10.10.255.2/32 interface=loopback network=10.10.255.2
 
 
 /routing ospf instance
@@ -24,7 +24,6 @@ set enabled=yes lsr-id=10.10.255.2 transport-address=10.10.255.2
 add interface=ether2
 add interface=ether3
 add interface=ether4
-
 
 
 /routing bgp instance
